@@ -463,6 +463,7 @@
         <div class="text-14 color-text-2 bio-clamp" style="margin-top:14px;">${c.bio}</div>
 
         <div class="flex gap-6 flex-wrap" style="margin-top:16px;">
+          ${isSaved ? `<span class="tag tag-sage" style="background:rgba(var(--sage-rgb),0.15);"><i data-lucide="bookmark-check" style="width:10px;height:10px;margin-right:2px;"></i>Saved</span>` : ''}
           ${c.tags.slice(0,3).map(t => `<span class="tag tag-${tint}">${t}</span>`).join('')}
           ${state.agentAnalysis && state.agentAnalysis[c.id] ? `<span class="tag tag-sage" style="background:rgba(var(--sage-rgb),0.15);">
             <i data-lucide="brain" style="width:10px;height:10px;margin-right:2px;"></i>
@@ -1000,7 +1001,7 @@
             <p class="color-text-2 mb-24 text-16">Nothing saved yet. Start by discovering collaborators.</p>
             <button class="btn btn-primary" data-action="nav" data-path="#/discover"><i data-lucide="compass" style="width:14px;height:14px;"></i> Go to Discover</button>
           </div>` :
-          `<div class="card-grid stagger-container">${creators.map((c, i) => renderCard(c, i)).join('')}</div>`
+          `<div class="card-grid stagger-container">${creators.map((c, i) => renderCard(c, i).replace('stagger-item', 'visible')).join('')}</div>`
         }
       </div>
     `;
@@ -1029,6 +1030,8 @@
             </div>
             <div class="flex gap-12 items-center">
               ${renderScoreRing(score.total)}
+              <button class="btn-icon" data-action="toggle-save" data-id="${cId}" aria-pressed="${state.shortlist.includes(cId)}" aria-label="Save"><i data-lucide="${state.shortlist.includes(cId) ? 'bookmark-check' : 'bookmark'}" style="width:20px;height:20px;${state.shortlist.includes(cId) ? 'color:var(--sage);' : ''}"></i></button>
+              <button class="btn-icon" data-action="share-profile" data-id="${cId}" aria-label="Share"><i data-lucide="share-2" style="width:20px;height:20px;"></i></button>
               <button class="btn-icon" data-action="close-overlays" aria-label="Close drawer"><i data-lucide="x"></i></button>
             </div>
           </div>
@@ -1410,13 +1413,24 @@ Let me know if you have bandwidth for a quick 20-minute chat this week to explor
       else state.shortlist.push(id);
       saveState();
 
-      // Animate icon
-      const icon = btn.querySelector('i, svg');
-      if (icon) {
-        btn.innerHTML = `<i data-lucide="${state.shortlist.includes(id) ? 'bookmark-check' : 'bookmark'}" style="width:18px;height:18px;${state.shortlist.includes(id) ? 'color:var(--sage);' : ''}"></i>`;
-        refreshIcons();
-      }
+      // Update all save buttons for this ID
+      document.querySelectorAll(`[data-action="toggle-save"][data-id="${id}"]`).forEach(saveBtn => {
+        saveBtn.setAttribute('aria-pressed', state.shortlist.includes(id));
+        saveBtn.innerHTML = `<i data-lucide="${state.shortlist.includes(id) ? 'bookmark-check' : 'bookmark'}" style="width:${saveBtn.closest('.drawer') ? '20' : '18'}px;height:${saveBtn.closest('.drawer') ? '20' : '18'}px;${state.shortlist.includes(id) ? 'color:var(--sage);' : ''}"></i>`;
+      });
+      refreshIcons();
       showToast(state.shortlist.includes(id) ? 'Saved!' : 'Removed from saved.');
+    }
+    else if (action === 'share-profile') {
+      const id = btn.getAttribute('data-id');
+      const creator = Data.creators.find(c => c.id === id);
+      const url = window.location.origin + window.location.pathname + '#/discover?id=' + id;
+      try {
+        navigator.clipboard.writeText(url);
+        showToast(`Link to ${creator.name} copied!`);
+      } catch (e) {
+        showToast("Failed to copy link");
+      }
     }
     else if (action === 'open-drawer') {
       renderDrawer(btn.getAttribute('data-id'), btn.getAttribute('data-tab'));
