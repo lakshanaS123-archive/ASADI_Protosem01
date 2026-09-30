@@ -3,7 +3,7 @@
  * Runs match scoring evaluation and logs results to LangSmith
  */
 
-const LANGSMITH_API_KEY = process.env.LANGSMITH_API_KEY || 'YOUR_API_KEY_HERE';
+const LANGSMITH_API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your actual key in production
 const LANGSMITH_BASE = 'https://api.smith.langchain.com';
 
 async function testLangSmithConnection() {
