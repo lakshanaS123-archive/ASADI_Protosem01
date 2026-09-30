@@ -121,6 +121,6 @@ if (typeof window !== 'undefined') {
   console.log('Run window.runSyndicateEval() to execute evaluation');
 } else {
   runEvaluation().then(s => {
-    process.exit(s.connection === 'OK' ? 0 : 1);
+    process.exitCode = s.connection === 'OK' ? 0 : 1;
   });
 }
